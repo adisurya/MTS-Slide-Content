@@ -1,0 +1,7 @@
+name = MTS Slide
+description = Module to display content slide show
+package = Content Slide
+core = 7.x
+files[] = mtsslide.module
+files[] = mtsslide.admin.inc
+configure=admin/config/content/mtsslide/settings

@@ -1,0 +1,143 @@
+<?php
+/**
+ * Implements hook_block_info().
+ */
+function mtsslide_block_info() {
+    $blocks = array();
+
+    $blocks['mtsslide'] = array(
+        'info' => t("Block to display content as a slideshow"),
+        'cache' => DRUPAL_NO_CACHE,
+    );
+
+    return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function mtsslide_block_view($block_name = '') {
+    if( $block_name == 'mtsslide') {
+        /**
+         * get data from table variable
+         */
+        $content_types = variable_get('mtsslide_node_types', 'page');
+        $total_display = (int)variable_get('mtsslide_total_node', 5);
+
+        /**
+         *  query conditions
+         *
+         * status is publishing status
+         * type is the type of content type
+         */
+        $conditions = array(
+            ':status' => 1,
+            ':type' => $content_types,
+        );
+
+
+        /**
+         * sql query
+         */
+        $sql = "SELECT n.nid
+                FROM {node} n
+                WHERE
+                        n.status = :status
+                    AND
+                        n.type = :type
+                ORDER BY n.created DESC
+                ";
+        /**
+         * if total display is less equal 0 then show all node
+         */
+        if( $total_display <=0 ) {
+            $result = db_query($sql, $conditions);
+        } else {
+            $result = db_query_range($sql, 0, $total_display, $conditions);
+        }
+
+        /**
+         * generate array of node id
+         */
+        $node_ids = array();
+        foreach($result as $record) {
+            $node_ids[] = $record->nid;
+        }
+
+        /**
+         * load node and all fields related with that node
+         */
+        $nodes = node_load_multiple($node_ids);
+        //print_r($nodes);
+        /**
+         * generate slide html
+         */
+        $contents = '<div id="MTSSlide" class="mts_slide">';
+        foreach($nodes as $node) {
+            $contents .= '<div id="MTSSlideItem">';
+
+            $contents .= '<img src="'.
+                file_create_url($node->field_image['und']['0']['uri']).
+                '" class="slide_image" />'
+            ;
+
+            $contents .= '<div id="MTSSlideText">';
+            $contents .= '<h3>'. l($node->title, "node/". $node->nid). '</h3>';
+            $contents .= '</div>';
+
+            $contents .= '</div>';
+
+        }
+        $contents .= '</div>';
+
+        return array(
+            'subject' => '',
+            'content' => $contents,
+        );
+    }
+}
+
+/**
+ * Implements hook_init().
+ */
+function mtsslide_init() {
+    if(drupal_is_front_page()) {
+        /**
+         * add css and javascript when page initialized
+         */
+        drupal_add_css(drupal_get_path('module', 'mtsslide'). '/css/mtsslide.css', array('group' => CSS_DEFAULT, 'every_page' => TRUE, 'type' => 'file'));
+
+        drupal_add_js(drupal_get_path('module', 'mtsslide'). '/js/jquery.cycle.all.js', array('every_page' => TRUE, 'type' => 'file'));
+        drupal_add_js(drupal_get_path('module', 'mtsslide'). '/js/mtsslide.js', array('every_page' => TRUE, 'type' => 'file'));
+
+    }
+}
+
+
+function mtsslide_menu() {
+    /**
+     * menu to display page configuration
+     */
+    $items['admin/config/mtsslide'] = array(
+        'title' => 'MTSSLIDE Configuration',
+        'description' => 'configure slideshow that will display in website',
+        'position' => 'right',
+        'weight' => -5,
+        'page callback' => 'system_admin_menu_block_page',
+        'access arguments' => array('administer site configuration'),
+        'file' => 'system.admin.inc',
+        'file path' => drupal_get_path('module', 'system'),
+    );
+
+    $items['admin/config/mtsslide/settings'] = array(
+        'title' => 'Slideshow settings',
+        'description' => 'Change what will display in slide show.',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('mtsslide_admin_settings'),
+        'access arguments' => array('administer site configuration'),
+        'type' => MENU_NORMAL_ITEM,
+        'file' => 'mtsslide.admin.inc',
+    );
+
+    return $items;
+}

@@ -1,0 +1,44 @@
+#MTSSlide {
+    padding:0px;
+    margin:0;
+
+}
+
+#MTSSlideItem {
+    width:675px;
+    height:200px;
+    background-color:black;
+    margin:0;
+}
+
+#MTSSlideItem img {
+    width:675px;
+    height:200px;
+    margin:0px;
+}
+
+#MTSSlideText {
+    position:relative;
+    bottom:55px;
+    width:675px;
+    height:50px;
+    background-color:black;
+    opacity:0.7;
+    color:white;
+}
+
+#MTSSlideText a, a:visited {
+    color:white;
+}
+
+
+#MTSSlideText h3 {
+    margin:0px;
+    letter-spacing:.1em;
+}
+
+#MTSSlideText div {
+    font-size:10pt;
+    text-align:justify;
+    letter-spacing:.1em;
+}
